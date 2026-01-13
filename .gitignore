@@ -1,0 +1,15 @@
+.env
+weather_history.db
+
+venv/
+.venv/
+env/
+bin/
+lib/
+include/
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+.idea/

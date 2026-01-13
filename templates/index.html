@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { transition: background 0.5s ease; min-height: 100vh; }
+        .bg-cold { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
+        .bg-mild { background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); }
+        .bg-warm { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+        .bg-hot { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
+        .weather-card { border-radius: 20px; }
+    </style>
+</head>
+<body class="{{ bg_class or 'bg-light' }}">
+    <div class="container py-5">
+        <h1 class="text-center mb-4">Погодный Мониторинг</h1>
+
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-6">
+                <form action="/weather" method="post" class="d-flex mb-2">
+                    <input type="text" name="city" class="form-control me-2" placeholder="Введите город" required>
+                    <button type="submit" class="btn btn-primary">Поиск</button>
+                </form>
+                <button onclick="getLocation()" class="btn btn-outline-secondary w-100">Использовать моё местоположение 📍</button>
+            </div>
+        </div>
+
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6">
+                <h5 class="text-muted mb-3 text-center">История поиска:</h5>
+<div class="list-group shadow-sm">
+    {% for item in history %}
+    <form action="/weather" method="post" class="m-0">
+        <input type="hidden" name="city" value="{{ item[0] }}">
+        <button type="submit" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <span>
+                <strong>{{ item[0] }}</strong>
+                <small class="text-muted ms-2">{{ item[2] }}</small>
+            </span>
+            <span class="badge bg-primary rounded-pill">{{ item[1] }}°C</span>
+        </button>
+    </form>
+    {% endfor %}
+</div>
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger text-center">{{ error }}</div>
+        {% endif %}
+
+        {% if city %}
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card weather-card p-4 text-center shadow border-0 bg-white">
+                    <h2 class="fw-bold">{{ city.capitalize() }}</h2>
+                    <div class="d-flex align-items-center justify-content-center">
+                        <img src="http://openweathermap.org/img/wn/{{ icon }}@4x.png" alt="icon">
+                        <h1 class="display-1 fw-bold">{{ temp }}°C</h1>
+                    </div>
+                    <p class="fs-4 text-muted">{{ desc }}</p>
+                    <div class="row mt-3 border-top pt-3">
+                        <div class="col-6 border-end"><h6>Влажность</h6><p class="fw-bold fs-5">{{ humidity }}%</p></div>
+                        <div class="col-6"><h6>Воздух</h6><p class="fw-bold fs-5 {{ aqi_class }}">{{ aqi_text }}</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-10 bg-white p-3 rounded shadow weather-card">
+                {{ graph_html | safe }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function getLocation() {
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Определяем...';
+    btn.disabled = true;
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                window.location.href = `/weather_by_coords?lat=${position.coords.latitude}&lon=${position.coords.longitude}`;
+            },
+            () => {
+                alert("Доступ к GPS отклонен");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        );
+    } else {
+        alert("Браузер не поддерживает геолокацию");
+    }
+}
+    </script>
+</body>
+</html>
